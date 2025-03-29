@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Produtos</title>
+    <style>
+        /* Resetando o estilo */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0; /* Cor de fundo cinza claro */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        h2 {
+            color: #333; /* Cor preta */
+            margin-bottom: 20px;
+        }
+
+        p {
+            font-size: 16px;
+            color: #444;
+            margin-bottom: 20px;
+        }
+
+        a {
+            color: #444;
+            text-decoration: none;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .sair {
+            font-size: 18px;
+            color: #fff;
+            background-color: #e74c3c; /* Vermelho */
+            padding: 10px 20px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 30px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .sair:hover {
+            background-color: #c0392b; /* Vermelho mais escuro */
+        }
+
+        .sair i {
+            font-size: 20px; /* Ícone de logout */
+        }
+
+        .produtos-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .produto-card {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            text-align: center;
+            width: 250px;
+            transition: transform 0.2s;
+        }
+
+        .produto-card:hover {
+            transform: translateY(-5px); /* Efeito de hover no card */
+        }
+
+        .produto-card img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 5px;
+        }
+
+        .produto-card p {
+            font-size: 18px;
+            color: #333;
+            margin-top: 15px;
+        }
+
+        .produto-card button {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background-color 0.3s;
+        }
+
+        .produto-card button.favoritar {
+            background-color: #444; /* Cor preta */
+            color: #fff;
+        }
+
+        .produto-card button.favoritar:hover {
+            background-color: #333; /* Cor mais escura no hover */
+        }
+
+        .produto-card button.remover {
+            background-color: #e74c3c; /* Vermelho */
+            color: #fff;
+        }
+
+        .produto-card button.remover:hover {
+            background-color: #c0392b; /* Vermelho mais escuro no hover */
+        }
+
+        /* Estilo para o botão de Finalizar Compra */
+        .finalizar-container {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .finalizar-container button {
+            background-color: #2ecc71; /* Verde */
+            color: #fff;
+            font-size: 18px;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .finalizar-container button:hover {
+            background-color: #27ae60; /* Verde mais escuro no hover */
+        }
+
+    </style>
+</head>
+<body>
+
+    <h2>Lista de Produtos</h2>
+    <p>Bem-vindo, {{ session['usuario'] }}!</p>
+
+    <div class="sair" onclick="window.location.href='{{ url_for('logout') }}'">
+        <i class="fas fa-sign-out-alt"></i> Sair
+    </div>
+
+    <div class="produtos-container">
+        {% for produto in produtos %}
+            <div class="produto-card">
+                <img src="{{ url_for('static', filename='images/' + produto.imagem) }}" alt="{{ produto.nome }}">
+                <p>{{ produto.nome }}</p>
+                <button class="favoritar" onclick="favoritar('{{ produto.nome }}')">Favoritar</button>
+                <button class="remover" onclick="removerFavorito('{{ produto.nome }}')">Remover Favorito</button>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Botão Finalizar Compra -->
+    <div class="finalizar-container">
+        <button onclick="finalizarCompra()">Finalizar Compra</button>
+    </div>
+
+    <script src="https://kit.fontawesome.com/a076d05399.js"></script> <!-- Ícones -->
+    <script>
+        let favoritos = [];
+
+        function favoritar(produto) {
+            if (!favoritos.includes(produto)) {
+                favoritos.push(produto);
+                alert(produto + " foi adicionado aos favoritos!");
+            } else {
+                alert(produto + " já está nos favoritos!");
+            }
+        }
+
+        function removerFavorito(produto) {
+            const index = favoritos.indexOf(produto);
+            if (index !== -1) {
+                favoritos.splice(index, 1);
+                alert(produto + " foi removido dos favoritos!");
+            } else {
+                alert(produto + " não está na lista de favoritos!");
+            }
+        }
+
+        function finalizarCompra() {
+            if (favoritos.length > 0) {
+                let mensagem = "Olá, gostaria de fazer essas compras. Qual seria o valor?\n";
+                favoritos.forEach(produto => {
+                    mensagem += "- " + produto + "\n";
+                });
+                const whatsappLink = `https://wa.me/556484590117?text=${encodeURIComponent(mensagem)}`;
+                window.open(whatsappLink, '_blank');
+            } else {
+                alert("Você não selecionou nenhum produto como favorito!");
+            }
+        }
+    </script>
+
+</body>
+</html>
