@@ -1,0 +1,326 @@
+<!-- FontAwesome e SweetAlert2 -->
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
+/>
+<link
+  rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css"
+/>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<style>
+  .menu {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: black;
+    padding: 15px 30px;
+    border-radius: 10px;
+    flex-wrap: wrap;
+  }
+
+  .menu .logo img {
+    height: 50px;
+    border-radius: 50%;
+  }
+
+  .menu-center {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+  }
+
+  .menu ul {
+    list-style: none;
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    padding: 0;
+    margin: 0;
+  }
+
+  .menu ul li a {
+    text-decoration: none;
+    color: white;
+    font-weight: bold;
+    padding: 10px 15px;
+    border-radius: 5px;
+    transition: 0.3s;
+  }
+
+  .menu ul li a:hover {
+    color: #ffcc00;
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .menu ul li a.ativo {
+    color: #ffcc00;
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  .menu-right {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .sair {
+    background: #e74c3c;
+    padding: 8px 12px;
+    border-radius: 5px;
+    color: white;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: 0.3s;
+    font-size: 14px;
+    text-decoration: none;
+    height: 35px;
+  }
+
+  .sair:hover {
+    background: #c0392b;
+    text-decoration: none;
+  }
+
+  .sair i {
+    font-size: 16px;
+  }
+
+  .usuario {
+    color: white;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 35px;
+  }
+
+  .usuario i {
+    font-size: 18px;
+  }
+
+  .carrinho {
+    position: relative;
+    cursor: pointer;
+    color: white;
+    font-size: 20px;
+    transition: 0.3s;
+    margin-right: 10px;
+  }
+
+  .carrinho:hover {
+    color: #ffcc00;
+  }
+
+  .carrinho-contador {
+    position: absolute;
+    top: -5px;
+    right: -10px;
+    background: red;
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+</style>
+
+<!-- Menu -->
+<nav class="menu">
+  <div class="logo">
+    <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="Logo" />
+  </div>
+
+  <div class="menu-center">
+    <ul>
+      <li>
+        <a
+          href="{{ url_for('produtos') }}"
+          class="{% if request.endpoint == 'produtos' %}ativo{% endif %}"
+          >Produtos</a
+        >
+      </li>
+      {% if session.get('usuario_id') == 1 %}
+      <li>
+        <a
+          href="{{ url_for('crud_produtos') }}"
+          class="{% if request.endpoint == 'crud_produtos' %}ativo{% endif %}"
+          >Gerenciar Produtos</a
+        >
+      </li>
+      <li>
+        <a
+          href="{{ url_for('crud_usuarios') }}"
+          class="{% if request.endpoint == 'crud_usuarios' %}ativo{% endif %}"
+          >Gerenciar Usuários</a
+        >
+      </li>
+      {% endif %}
+    </ul>
+  </div>
+
+  <div class="menu-right">
+    <div class="carrinho" onclick="abrirCarrinho()">
+      <i class="fas fa-shopping-cart"></i>
+      <span class="carrinho-contador" id="contadorCarrinho">0</span>
+    </div>
+    <div class="usuario">
+      <i class="fas fa-user"></i> {{ session['usuario'] }}
+    </div>
+    <a href="{{ url_for('logout') }}" class="sair">
+      <i class="fas fa-sign-out-alt"></i> Sair
+    </a>
+  </div>
+</nav>
+
+<script>
+  document.addEventListener("DOMContentLoaded", atualizarContadorCarrinho);
+
+  function atualizarContadorCarrinho() {
+    //console.log("Chamando atualização do carrinho...");
+    fetch("/carrinho/quantidade")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.quantidade !== undefined) {
+          document.getElementById("contadorCarrinho").innerText = data.quantidade;
+        }
+      });
+  }
+
+  function abrirCarrinho() {
+    fetch("/carrinho/itens")
+      .then((res) => res.json())
+      .then((data) => {
+        if (!data.itens || data.itens.length === 0) {
+          Swal.fire({
+            icon: "info",
+            title: "Carrinho vazio",
+            text: "Adicione produtos antes de continuar.",
+          });
+          return;
+        }
+
+        const html = `
+          <div id="carrinho-lista" style="text-align: left; max-height: 300px; overflow-y: auto;">
+            ${gerarHtmlItens(data.itens)}
+          </div>
+          <button onclick="finalizarCompra()" style="background: #28a745; color: white; padding: 10px; margin-top: 15px; width: 100%; border: none; border-radius: 5px; cursor: pointer;">
+            ✅ Finalizar Compra
+          </button>`;
+
+        Swal.fire({
+          title: "🛒 Carrinho de Compras",
+          html,
+          showConfirmButton: false,
+          didOpen: () => {
+            // nada por enquanto
+          }
+        });
+      })
+      .catch((err) => {
+        Swal.fire({
+          icon: "error",
+          title: "Erro",
+          text: "Erro ao carregar carrinho.",
+        });
+        console.error("Erro ao abrir carrinho:", err);
+      });
+  }
+
+  function gerarHtmlItens(itens) {
+    return itens.map(item => `
+      <div style="padding: 8px 0; display: flex; justify-content: space-between; align-items: center;">
+        <span>${item.nome}</span>
+        <span style="margin-left: 10px; font-weight: bold;">x${item.quantidade}</span>
+        <button onclick="removerProduto(${item.id})"
+          style="background: red; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer;">
+          🗑️
+        </button>
+      </div>
+    `).join("");
+  }
+
+  function removerProduto(produtoId) {
+  document.querySelectorAll("button").forEach(btn => btn.disabled = true);
+
+  fetch('/carrinho/remover', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ produto_id: produtoId })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      // ⚠️ Espera o carrinho ser realmente atualizado antes de buscar novo total
+      fetch("/carrinho/itens")
+        .then(res => res.json())
+        .then(carrinho => {
+          if (!carrinho.itens || carrinho.itens.length === 0) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Carrinho limpo!',
+              text: 'Todos os produtos foram removidos.',
+              timer: 2500,
+              showConfirmButton: false
+            });
+          } else {
+            // Atualiza apenas o conteúdo da lista
+            document.getElementById("carrinho-lista").innerHTML = gerarHtmlItens(carrinho.itens);
+
+            Swal.fire({
+              icon: 'success',
+              title: 'Removido!',
+              text: '1 item foi removido do carrinho.',
+              timer: 1500,
+              showConfirmButton: false
+            });
+          }
+
+          // ✅ Atualiza o contador SOMENTE após tudo
+          atualizarContadorCarrinho();
+        });
+    } else {
+      Swal.fire({ icon: 'error', title: 'Erro', text: data.message || 'Erro ao remover produto' });
+    }
+  })
+  .finally(() => {
+    setTimeout(() => {
+      document.querySelectorAll("button").forEach(btn => btn.disabled = false);
+    }, 800);
+  });
+}
+
+  function finalizarCompra() {
+    fetch("/finalizar-compra", { method: "POST" })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          window.open(data.whatsapp_url, "_blank");
+
+          Swal.fire({
+            icon: "success",
+            title: "Compra Finalizada!",
+            text: "Sua compra foi enviada com sucesso pelo WhatsApp.",
+            timer: 20000,
+            showConfirmButton: false,
+          });
+
+          atualizarContadorCarrinho();
+        } else {
+          Swal.fire({
+            icon: "error",
+            title: "Erro",
+            text: "Não foi possível finalizar a compra.",
+          });
+        }
+      });
+  }
+</script>

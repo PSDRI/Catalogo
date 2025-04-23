@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Acesso Negado</title>
+  <style>
+    body {
+      background-color: #f4f4f4;
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      text-align: center;
+    }
+    .content {
+      background-color: white;
+      padding: 40px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      font-size: 36px;
+      color: #e74c3c;
+    }
+    p {
+      font-size: 18px;
+      margin: 15px 0;
+    }
+    a {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 10px 20px;
+      background-color: #333;
+      color: white;
+      border-radius: 5px;
+      text-decoration: none;
+    }
+    a:hover {
+      background-color: #000;
+    }
+  </style>
+</head>
+<body>
+  <div class="content">
+    <h1>🚫 Acesso Negado</h1>
+    <p>Você não tem permissão para acessar esta página.</p>
+    <a href="{{ url_for('produtos') }}">Voltar à Página Inicial</a>
+  </div>
+</body>
+</html>
